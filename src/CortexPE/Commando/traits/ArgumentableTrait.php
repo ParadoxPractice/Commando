@@ -210,10 +210,10 @@ trait ArgumentableTrait{
 				$args[] = "<" . $names . ">";
 			}
 		}
-		$msg .= ((empty($args)) ? "" : " ") .  implode(TextFormat::RED . " ", $args) . ": " . $this->getDescription();
+		$msg .= TextFormat::GOLD . ((empty($args)) ? "" : " ") .  implode(" ", $args) . ": " . $this->getDescription();
 		foreach($this->subCommands as $label => $subCommand){
 			if($label === $subCommand->getName()){
-				$msg .= "\n - " . $subCommand->generateUsageMessage($name);
+				$msg .= "\n - " . TextFormat::YELLOW . $subCommand->generateUsageMessage($name);
 			}
 		}
 

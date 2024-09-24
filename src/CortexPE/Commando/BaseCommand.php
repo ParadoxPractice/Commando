@@ -40,6 +40,8 @@ use pocketmine\lang\Translatable;
 use pocketmine\plugin\Plugin;
 use pocketmine\plugin\PluginOwned;
 use pocketmine\utils\TextFormat;
+use ParadoxTeam\ParadoxCore\locale\Locale;
+use ParadoxTeam\ParadoxCore\player\ParadoxPlayer;
 use function array_shift;
 use function array_unique;
 use function array_unshift;
@@ -55,15 +57,6 @@ abstract class BaseCommand extends Command implements IArgumentable, IRunnable, 
 	public const ERR_INSUFFICIENT_ARGUMENTS = 0x03;
 	public const ERR_NO_ARGUMENTS = 0x04;
 	public const ERR_INVALID_ARGUMENTS = 0x05;
-
-	/** @var string[] */
-	protected $errorMessages = [
-		self::ERR_INVALID_ARG_VALUE => TextFormat::RED . "Invalid value '{value}' for argument #{position}. Expecting: {expected}.",
-		self::ERR_TOO_MANY_ARGUMENTS => TextFormat::RED . "Too many arguments given.",
-		self::ERR_INSUFFICIENT_ARGUMENTS => TextFormat::RED . "Insufficient number of arguments given.",
-		self::ERR_NO_ARGUMENTS => TextFormat::RED . "No arguments are required for this command.",
-		self::ERR_INVALID_ARGUMENTS => TextFormat::RED . "Invalid arguments supplied.",
-	];
 
 	/** @var CommandSender */
 	protected CommandSender $currentSender;
@@ -126,6 +119,18 @@ abstract class BaseCommand extends Command implements IArgumentable, IRunnable, 
 		}
 	}
 
+	public function getErrorMessages() : array {
+		return [
+			self::ERR_INVALID_ARG_VALUE => Locale::getInstance()->getLanguage(($this->currentSender instanceof ParadoxPlayer ? $this->currentSender->getLocale() : Locale::DEFAULT_LANGUAGE))->translate("paradox.cmd.invalidArgsValue"),
+			self::ERR_TOO_MANY_ARGUMENTS => Locale::getInstance()->getLanguage(($this->currentSender instanceof ParadoxPlayer ? $this->currentSender->getLocale() : Locale::DEFAULT_LANGUAGE))->translate("paradox.cmd.tooManyArgs"),
+			self::ERR_INSUFFICIENT_ARGUMENTS => Locale::getInstance()->getLanguage(($this->currentSender instanceof ParadoxPlayer ? $this->currentSender->getLocale() : Locale::DEFAULT_LANGUAGE))->translate("paradox.cmd.insufficientArgs"),
+			self::ERR_NO_ARGUMENTS => Locale::getInstance()->getLanguage(($this->currentSender instanceof ParadoxPlayer ? $this->currentSender->getLocale() : Locale::DEFAULT_LANGUAGE))->translate("paradox.cmd.noArgs"),
+			self::ERR_INVALID_ARGUMENTS => Locale::getInstance()->getLanguage(($this->currentSender instanceof ParadoxPlayer ? $this->currentSender->getLocale() : Locale::DEFAULT_LANGUAGE))->translate("paradox.cmd.invalidArgs"),
+		];
+	}
+
+
+
 	/**
 	 * @param ArgumentableTrait $ctx
 	 * @param array             $args
@@ -147,30 +152,17 @@ abstract class BaseCommand extends Command implements IArgumentable, IRunnable, 
 
 	abstract public function onRun(CommandSender $sender, string $aliasUsed, array $args): void;
 
-	protected function sendUsage(): void {
-		$this->currentSender->sendMessage(TextFormat::RED . "Usage: " . $this->getUsage());
+	protected function sendUsage() : void {
+		$this->currentSender->sendMessage(Locale::getInstance()->getLanguage(($this->currentSender instanceof ParadoxPlayer ? $this->currentSender->getLocale() : Locale::DEFAULT_LANGUAGE))->translate("paradox.cmd.usage", ["{usage}" => $this->getUsage()]));
 	}
 
 	public function sendError(int $errorCode, array $args = []): void {
-		$str = (string)$this->errorMessages[$errorCode];
+		$str = (string) $this->getErrorMessages()[$errorCode];
 		foreach($args as $item => $value) {
 			$str = str_replace('{' . $item . '}', (string) $value, $str);
 		}
 		$this->currentSender->sendMessage($str);
 		$this->sendUsage();
-	}
-
-	public function setErrorFormat(int $errorCode, string $format): void {
-		if(!isset($this->errorMessages[$errorCode])) {
-			throw new InvalidErrorCode("Invalid error code 0x" . dechex($errorCode));
-		}
-		$this->errorMessages[$errorCode] = $format;
-	}
-
-	public function setErrorFormats(array $errorFormats): void {
-		foreach($errorFormats as $errorCode => $format) {
-			$this->setErrorFormat($errorCode, $format);
-		}
 	}
 
 	public function registerSubCommand(BaseSubCommand $subCommand): void {
