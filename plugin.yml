@@ -1,0 +1,6 @@
+name: Commando
+main: CortexPE\Commando\Commando
+version: 3.2.1
+api: 5.3.0
+author: CortexPE
+authors: [ParoxityTeam]
